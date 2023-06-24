@@ -8,14 +8,14 @@ from users.serializers import UserSerializer
 class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('id', 'name', 'measurement_unit')
+        fields = '__all__'
         model = Ingredient
 
 
 class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('id', 'name', 'color', 'slug')
+        fields = '__all__'
         model = Tag
 
 
@@ -56,21 +56,19 @@ class RecipeSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         tags_pk = data.get('tags')
         internal_data = super().to_internal_value(data)
-        tags = []
-        try:
-            for tag in tags_pk:
-                tags.append(Tag.objects.get(pk=tag))
-        except TypeError:
-            raise serializers.ValidationError(
+        if not tags_pk:
+            raise serializers.ValidationError( 
                 {'tags': ['Добавьте теги']},
                 code='invalid',
             )
-        except Tag.DoesNotExist:
-            raise ValidationError(
+
+        exists_tags = Tag.objects.filter(pk__in=tags_pk)
+        if exists_tags.count() != len(tags_pk):
+            raise ValidationError( 
                 {'tags': ['Переданы несуществующие теги']},
-                code='invalid',
-            )
-        internal_data['tags'] = tags
+                code='invalid',)
+
+        internal_data['tags'] = exists_tags
         return internal_data
 
     def validate(self, data):
@@ -81,7 +79,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         if data.get("cooking_time") <= 0:
             raise serializers.ValidationError(
                 'Должно быть положительным числом')
-        if tags_pk == []:
+        if not tags_pk:
             raise serializers.ValidationError('Добавьте теги')
         if len(tags_pk) != len(set(tags_pk)):
             raise serializers.ValidationError('Теги не уникальны')
@@ -145,7 +143,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
         tags_data = validated_data.pop('tags')
         instance.tags.set(tags_data)
-        instance.save()
         ingredients_data = validated_data.pop('amount_ingredient')
         recipe = Recipe.objects.get(pk=instance.id)
         objs = [
@@ -156,9 +153,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             for ingredient_data in ingredients_data
         ]
-        CountIngredients.objects.filter(recipe=recipe).delete()
+        if ingredients_data is not None:
+            instance.ingredients.clear()
         CountIngredients.objects.bulk_create(objs)
-        return instance
+        return super().update(instance, validated_data)
 
     def get_is_favorited(self, obj):
         request = self.context["request"]

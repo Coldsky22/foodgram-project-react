@@ -38,8 +38,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(request.user)
         if request.method == "GET":
             return Response(serializer.data)
-        pk = request.user.pk
-        user = User.objects.get(id=pk)
+        user = User.objects.get(id=request.user.pk)
         serializer = UserSerializer(user, data=request.data, partial=True)
         if not serializer.is_valid():
             return Response(
