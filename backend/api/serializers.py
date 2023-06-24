@@ -57,14 +57,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags_pk = data.get('tags')
         internal_data = super().to_internal_value(data)
         if not tags_pk:
-            raise serializers.ValidationError( 
+            raise serializers.ValidationError(
                 {'tags': ['Добавьте теги']},
                 code='invalid',
             )
 
         exists_tags = Tag.objects.filter(pk__in=tags_pk)
         if exists_tags.count() != len(tags_pk):
-            raise ValidationError( 
+            raise ValidationError(
                 {'tags': ['Переданы несуществующие теги']},
                 code='invalid',)
 
