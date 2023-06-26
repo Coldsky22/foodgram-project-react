@@ -5,6 +5,7 @@ from .models import (CountIngredients, Favorites, Follow, Ingredient, Recipe,
 
 admin.site.register(Tag, admin.ModelAdmin)
 
+
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'measurement_unit',)

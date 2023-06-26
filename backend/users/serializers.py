@@ -16,18 +16,18 @@ class UserSerializer(serializers.ModelSerializer):
             ),
             MaxLengthValidator(150, "Логин слишком длинный"),
         ],
-        required=True
+        required=True,
     )
     email = serializers.EmailField(
         validators=[
             MaxLengthValidator(254, "Адрес слишком длинный"),
         ],
-        required=True
+        required=True,
     )
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     def validate(self, data):
-        data['email'] = data['email'].lower()
+        data["email"] = data["email"].lower()
         if data.get("username").lower() == "me":
             raise serializers.ValidationError("Запрещенный логин")
         if User.objects.filter(username=data.get("username").lower()):
@@ -42,36 +42,30 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
-        user.set_password(validated_data['password'])
+        user.set_password(validated_data["password"])
         user.save()
         return user
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get("username", instance.username)
         instance.email = validated_data.get("email", instance.email)
-        instance.first_name = validated_data.get(
-            "first_name", instance.first_name
-        )
-        instance.last_name = validated_data.get(
-            "last_name", instance.last_name
-        )
+        instance.first_name = validated_data.get("first_name", instance.first_name)
+        instance.last_name = validated_data.get("last_name", instance.last_name)
         instance.save()
         return instance
 
     class Meta:
         model = User
         fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'password',
-            'is_subscribed'
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "password",
+            "is_subscribed",
         )
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
+        extra_kwargs = {"password": {"write_only": True}}
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -79,8 +73,13 @@ class UserSerializer(serializers.ModelSerializer):
         return context
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        return request.user.follower.filter(author=obj).exists()  if request and request.user .is_authenticated else False
+        request = self.context.get("request")
+        return (
+            request.user.follower.filter(author=obj).exists()
+            if request and request.user.is_authenticated
+            else False
+        )
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField(required=True)
@@ -88,7 +87,10 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = ('current_password', 'new_password',)
+        fields = (
+            "current_password",
+            "new_password",
+        )
 
     def validate_new_password(self, value):
         validate_password(value)
@@ -97,11 +99,9 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate(self, data):
         request = self.context["request"]
         user = request.user
-        current_password = data.get('current_password')
+        current_password = data.get("current_password")
         if not user.check_password(current_password):
-            raise serializers.ValidationError(
-                "Неверный текущий пароль"
-            )
+            raise serializers.ValidationError("Неверный текущий пароль")
         return data
 
 
@@ -116,36 +116,35 @@ class FollowSerializer(UserSerializer):
 
     class Meta:
         model = User
-        fields = ('email',
-                  'id',
-                  'username',
-                  'first_name',
-                  'last_name',
-                  'is_subscribed',
-                  'recipes',
-                  'recipes_count'
-                  )
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "is_subscribed",
+            "recipes",
+            "recipes_count",
+        )
 
     def validate(self, author, *args, **kwargs):
         user = self.context["request"].user
         author = self.context["author"]
         if user == author:
-            raise serializers.ValidationError('Подписка на самого себя!')
-        if Follow.objects.filter(user=user,
-                                 author=author
-                                 ).exists():
-            raise serializers.ValidationError('Вы уже подписаны')
+            raise serializers.ValidationError("Подписка на самого себя!")
+        if Follow.objects.filter(user=user, author=author).exists():
+            raise serializers.ValidationError("Вы уже подписаны")
         return author
 
     def get_recipes(self, obj):
         recipes_limit = None
-        if self.context["request"].query_params.get('recipes_limit'):
+        if self.context["request"].query_params.get("recipes_limit"):
             recipes_limit = int(
-                self.context["request"].query_params.get('recipes_limit')
+                self.context["request"].query_params.get("recipes_limit")
             )
         return RecipeMinifiedSerializer(
-            Recipe.objects.filter(author=obj)[:recipes_limit],
-            many=True).data
+            Recipe.objects.filter(author=obj)[:recipes_limit], many=True
+        ).data
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj).count()
