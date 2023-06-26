@@ -22,7 +22,8 @@ class CountIngredientsSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(), source="ingredient.id"
     )
     name = serializers.ReadOnlyField(source="ingredient.name")
-    measurement_unit = serializers.ReadOnlyField(source="ingredient.measurement_unit")
+    measurement_unit = serializers.ReadOnlyField(
+        source="ingredient.measurement_unit")
     amount = serializers.IntegerField()
 
     class Meta:
@@ -38,7 +39,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         source="amount_ingredient",
     )
     tags = TagSerializer(read_only=True, many=True)
-    is_favorited = serializers.SerializerMethodField(read_only=True, default=False)
+    is_favorited = serializers.SerializerMethodField(read_only=True,
+                                                     default=False)
     is_in_shopping_cart = serializers.SerializerMethodField(
         read_only=True, default=False
     )
@@ -67,7 +69,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         if "cooking_time" not in data:
             raise serializers.ValidationError("Добавьте время приготовления")
         if data.get("cooking_time") <= 0:
-            raise serializers.ValidationError("Должно быть положительным числом")
+            raise serializers.ValidationError(
+                "Должно быть положительным числом")
         if not tags_pk:
             raise serializers.ValidationError("Добавьте теги")
         if len(tags_pk) != len(set(tags_pk)):
@@ -76,13 +79,15 @@ class RecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Добавьте ингредиенты")
         for ingredient in ingredients:
             if ingredient.get("amount") <= 0:
-                raise serializers.ValidationError("Добавьте количество ингредиента")
+                raise serializers.ValidationError(
+                    "Добавьте количество ингредиента")
         ingredient_list = [
             ingredient["ingredient"].get("id") for ingredient in ingredients
         ]
         unique_ingredient_list = set(ingredient_list)
         if len(ingredient_list) != len(unique_ingredient_list):
-            raise serializers.ValidationError("Ингредиенты должны быть уникальны")
+            raise serializers.ValidationError(
+                "Ингредиенты должны быть уникальны")
         return data
 
     class Meta:
@@ -132,7 +137,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         try:
             recipe = Recipe.objects.get(pk=instance.id)
         except Recipe.DoesNotExist:
-            raise CustomException("The recipe you are trying to update does not exist.")
+            raise Exception("Этот рецепт не существует")
         objs = [
             CountIngredients(
                 recipe=recipe,
@@ -149,7 +154,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         request = self.context["request"]
         user = request.user
-        return user.is_authenticated and user.favorite_user.filter(recipe=obj).exists()
+        return (user.is_authenticated
+                and user.favorite_user.filter(recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context["request"]

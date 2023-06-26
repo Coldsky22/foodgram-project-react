@@ -11,11 +11,12 @@ def file_creation(shopping_list):
     with open(filename, "w+") as file:
         for line in shopping_list:
             ingredient = next(
-                (i for i in ingredients if i.id == line["ingredient"]), None
-            )
+                (i for i in ingredients if i.id == line["ingredient"]), None)
         if ingredient:
             file.write(
-                f'{ingredient.recipe.name}: {ingredient.name} ({ingredient.measurement_unit}) - {line["count"]}\n'
+                f'{ingredient.recipe.name}:'
+                f'{ingredient.name}'
+                f'({ingredient.measurement_unit}) - {line["count"]}\n'
             )
     with open(filename, "rb") as read_file:
         response = HttpResponse(read_file.read(), content_type="text/plain")
