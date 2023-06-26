@@ -8,7 +8,9 @@ from django.core.management import BaseCommand
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("csv_file", nargs="+", type=str)
-        parser.add_argument("--log_file", type=str, help="path to the log file")
+        parser.add_argument("--log_file", type=str,
+                            help="path to the log file"
+                            )
 
 
 def handle(self, *args, **options):

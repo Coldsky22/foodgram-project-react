@@ -132,7 +132,8 @@ class CountIngredients(models.Model):
 
     def clean(self):
         if self.amount > models.PositiveIntegerField.MAX_VALUE:
-            raise ValidationError('Количество ингредиента превышает максимальное значение.')
+            raise ValidationError(
+                'Количество ингредиента превышает максимальное значение.')
 
     class Meta:
         ordering = ('recipe',)
