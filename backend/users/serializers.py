@@ -2,6 +2,7 @@ from app.models import Follow, Recipe
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import MaxLengthValidator, RegexValidator
 from rest_framework import serializers
+from api.serializers import RecipeMinifiedSerializer
 
 from .models import User
 
@@ -79,12 +80,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request:
-            current_user = request.user
-            if current_user.is_authenticated:
-                return current_user.follower.filter(author=obj).exists()
-        return False
-
+        return request.user.follower.filter(author=obj).exists()  if request and request.user .is_authenticated else False
 
 class ChangePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField(required=True)
@@ -142,7 +138,6 @@ class FollowSerializer(UserSerializer):
         return author
 
     def get_recipes(self, obj):
-        from api.serializers import RecipeMinifiedSerializer
         recipes_limit = None
         if self.context["request"].query_params.get('recipes_limit'):
             recipes_limit = int(

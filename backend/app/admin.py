@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (CountIngredients, Favorites, Follow, Ingredient, Recipe,
                      ShopingCart, Tag)
 
+admin.site.register(Tag, admin.ModelAdmin)
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
@@ -21,9 +22,6 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author', 'tags')
     list_filter = ('author', 'tags',)
     empty_value_display = '-пусто-'
-
-
-admin.site.register(Tag)
 
 
 @admin.register(Follow)

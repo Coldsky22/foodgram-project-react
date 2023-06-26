@@ -63,40 +63,39 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
 
         exists_tags = Tag.objects.filter(pk__in=tags_pk)
-        if exists_tags.count() != len(tags_pk):
-            raise ValidationError(
-                {'tags': ['Переданы несуществующие теги']},
-                code='invalid',)
-
+        if exists_tags.count() != len(tags_pk): 
+            raise ValidationError( 
+                {'tags': ['Переданы несуществующие теги']}, 
+                code='invalid',) 
         internal_data['tags'] = exists_tags
         return internal_data
 
     def validate(self, data):
         tags_pk = data.get('tags')
-        ingredients = data.pop('amount_ingredient')
+        ingredients = data.get('amount_ingredient')
         if "cooking_time" not in data:
             raise serializers.ValidationError('Добавьте время приготовления')
         if data.get("cooking_time") <= 0:
             raise serializers.ValidationError(
-                'Должно быть положительным числом')
+            'Должно быть положительным числом')
         if not tags_pk:
             raise serializers.ValidationError('Добавьте теги')
         if len(tags_pk) != len(set(tags_pk)):
             raise serializers.ValidationError('Теги не уникальны')
-        if ingredients == []:
+        if not ingredients:
             raise serializers.ValidationError('Добавьте ингредиенты')
         for ingredient in ingredients:
             if ingredient.get('amount') <= 0:
                 raise serializers.ValidationError(
-                    'Добавьте количество ингредиента'
+                'Добавьте количество ингредиента'
                 )
         ingredient_list = [
-            ingredient['ingredient'].get('id') for ingredient in ingredients
+        ingredient['ingredient'].get('id') for ingredient in ingredients
         ]
         unique_ingredient_list = set(ingredient_list)
         if len(ingredient_list) != len(unique_ingredient_list):
             raise serializers.ValidationError(
-                'Ингредиенты должны быть уникальны'
+            'Ингредиенты должны быть уникальны'
             )
         return data
 
@@ -144,7 +143,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags_data = validated_data.pop('tags')
         instance.tags.set(tags_data)
         ingredients_data = validated_data.pop('amount_ingredient')
-        recipe = Recipe.objects.get(pk=instance.id)
+        try:
+            recipe = Recipe.objects.get(pk=instance.id)
+        except Recipe.DoesNotExist:
+            raise CustomException("The recipe you are trying to update does not exist.")
         objs = [
             CountIngredients(
                 recipe=recipe,

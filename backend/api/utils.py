@@ -1,24 +1,23 @@
-from os import remove
 from app.models import Ingredient
-from django.contrib.auth import get_user_model
 from django.http import HttpResponse
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
+filename = "foodgram_shoping_cart.txt"
 
-
-def file_creation(shoping_list):
-    with open("example.txt", "w+") as file_name:
-        for line_list in shoping_list:
-            ingredient = Ingredient.objects.get(pk=line_list['ingredient'])
-            file_name.write(
-                f'{ingredient.name} 'f'({ingredient.measurement_unit})'
-                f' - {line_list["count"]}\n')
-    with open("example.txt", "r") as read_file:
-        response = HttpResponse(
-            read_file.read(), content_type="text/plain,charset=utf8")
-        message = 'attachment; filename="{}.txt"'.format('file_name')
-        response['Content-Disposition'] = message
-        remove("example.txt")
+def file_creation(shopping_list):
+    ingredients = Ingredient.objects.select_related('recipe')
+    with open(filename, "w+") as file:
+        for line in shopping_list:
+            ingredient = next((i for i in ingredients if i.id == line['ingredient']), None)
+        if ingredient:
+            file.write(f'{ingredient.recipe.name}: {ingredient.name} ({ingredient.measurement_unit}) - {line["count"]}\n')
+    with open(filename, "rb") as read_file:
+        response = HttpResponse(read_file.read(), content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
-# print(Ingredient.objects.get(pk=line_list['ingredient']).name )
+
+
+
+

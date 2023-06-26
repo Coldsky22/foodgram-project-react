@@ -2,7 +2,7 @@ from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 from users.models import User
-
+from django.core.exceptions import ValidationError
 
 class Tag(models.Model):
     name = models.CharField(
@@ -128,6 +128,9 @@ class CountIngredients(models.Model):
         "Количество ингредиента",
         validators=(MinValueValidator(1),),
     )
+    def clean(self):
+        if self.amount > models.PositiveIntegerField.MAX_VALUE:
+            raise ValidationError('Количество ингредиента превышает максимальное значение.')
 
     class Meta:
         ordering = ('recipe',)
