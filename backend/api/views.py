@@ -137,9 +137,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = f"attachment; filename={filename}"
         return response
 
-# не понял как делать
 @api_view(["GET"])
 def get_favorite(request):
-    quryset = [i.recipe for i in Favorites.objects.filter(user=request.user)]
-    serializer = RecipeMinifiedSerializer(quryset, many=True)
+    queryset = Favorites.objects.filter(user=request.user).values("recipe")
+    recipe_ids = [item["recipe"] for item in queryset]
+    recipes = Recipe.objects.filter(pk__in=recipe_ids)
+    serializer = RecipeMinifiedSerializer(recipes, many=True)
     return Response(serializer.data)
