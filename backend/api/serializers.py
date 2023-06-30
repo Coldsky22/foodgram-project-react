@@ -3,6 +3,9 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from users.serializers import UserSerializer
+from core.validators import ingredients_validator, tags_exist_validator
+from django.shortcuts import get_object_or_404
+
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -47,21 +50,29 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         tags_pk = data.get("tags")
-        internal_data = super().to_internal_value(data)
         if not tags_pk:
             raise serializers.ValidationError(
                 {"tags": ["Добавьте теги"]},
                 code="invalid",
             )
+        
+        tags_ids = self.initial_data.get("tags")
+        ingredients = self.initial_data.get("ingredients")
 
-        exists_tags = Tag.objects.filter(pk__in=tags_pk)
-        if exists_tags.count() != len(tags_pk):
-            raise ValidationError(
-                {"tags": ["Переданы несуществующие теги"]},
-                code="invalid",
-            )
-        internal_data["tags"] = exists_tags
-        return internal_data
+        if not tags_ids or not ingredients:
+            raise ValidationError("Недостаточно данных.")
+
+        tags = tags_exist_validator(tags_ids, Tag)
+        ingredients = ingredients_validator(ingredients, Ingredient)
+
+        data.update(
+            {
+                "tags": tags,
+                "ingredients": ingredients,
+                "author": self.context.get("request").user,
+            }
+        )
+        return data
 
     def validate(self, data):
         tags_pk = data.get("tags")
@@ -124,6 +135,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         CountIngredients.objects.bulk_create(objs)
         return recipe
 
+
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)
         instance.image = validated_data.get("image", instance.image)
@@ -134,10 +146,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags_data = validated_data.pop("tags")
         instance.tags.set(tags_data)
         ingredients_data = validated_data.pop("amount_ingredient")
-        try:
-            recipe = Recipe.objects.get(pk=instance.id)
-        except Recipe.DoesNotExist:
+
+        if Recipe.objects.filter(pk=instance.id).exists():
+            recipe = get_object_or_404(Recipe, pk=instance.id)
+        else:
             raise Exception("Этот рецепт не существует")
+
         objs = [
             CountIngredients(
                 recipe=recipe,
@@ -146,10 +160,13 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             for ingredient_data in ingredients_data
         ]
+        
         if ingredients_data is not None:
             instance.ingredients.clear()
+        
         CountIngredients.objects.bulk_create(objs)
         return super().update(instance, validated_data)
+
 
     def get_is_favorited(self, obj):
         request = self.context["request"]

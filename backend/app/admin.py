@@ -3,7 +3,15 @@ from django.contrib import admin
 from .models import (CountIngredients, Favorites, Follow, Ingredient, Recipe,
                      ShopingCart, Tag)
 
-admin.site.register(Tag, admin.ModelAdmin)
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "slug",
+        "color",
+    )
+    search_fields = ("name", "color")
+
 
 
 @admin.register(Ingredient)

@@ -1,3 +1,4 @@
+from django.http.response import HttpResponse
 from app.models import (CountIngredients, Favorites, Ingredient, Recipe,
                         ShopingCart, Tag)
 from django.contrib.auth import get_user_model
@@ -15,6 +16,8 @@ from .permissions import IsUserOwner
 from .serializers import (IngredientSerializer, RecipeMinifiedSerializer,
                           RecipeSerializer, TagSerializer)
 from .utils import file_creation
+from core.services import create_shoping_list
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 User = get_user_model()
 
@@ -122,18 +125,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,)
             )
     def getfile(self, request):
-        shoping_carts = ShopingCart.objects.filter(
-            user=request.user
+        user = self.request.user
+        if not user.carts.exists():
+            return Response(status=HTTP_400_BAD_REQUEST)
+
+        filename = f"{user.username}_shopping_list.txt"
+        shopping_list = create_shoping_list(user)
+        response = HttpResponse(
+            shopping_list, content_type="text.txt; charset=utf-8"
         )
-        recipes = [i.recipe.id for i in shoping_carts]
-        shoping_list = (CountIngredients.objects.filter(recipe__in=recipes)
-                        .order_by('ingredient')
-                        .values('ingredient')
-                        .annotate(count=Sum("amount"))
-                        )
-        return file_creation(shoping_list)
+        response["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
 
-
+# не понял как делать
 @api_view(["GET"])
 def get_favorite(request):
     quryset = [i.recipe for i in Favorites.objects.filter(user=request.user)]
