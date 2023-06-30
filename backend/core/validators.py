@@ -1,8 +1,11 @@
 from django.core.exceptions import ValidationError
 from app.models import Ingredient, Tag
 
+tag = Tag
+ingredient = Ingredient
 
-def tags_exist_validator(tags_ids, Tag):
+
+def tags_exist_validator(tags_ids, tag):
     if not tags_ids:
         raise ValidationError("Не указаны тэги")
 
