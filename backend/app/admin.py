@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (CountIngredients, Favorites, Follow, Ingredient, Recipe,
                      ShopingCart, Tag)
 
+
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = (
@@ -11,7 +12,6 @@ class TagAdmin(admin.ModelAdmin):
         "color",
     )
     search_fields = ("name", "color")
-
 
 
 @admin.register(Ingredient)

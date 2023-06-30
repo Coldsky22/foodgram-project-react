@@ -7,7 +7,6 @@ from core.validators import ingredients_validator, tags_exist_validator
 from django.shortcuts import get_object_or_404
 
 
-
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
@@ -55,7 +54,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 {"tags": ["Добавьте теги"]},
                 code="invalid",
             )
-        
+
         tags_ids = self.initial_data.get("tags")
         ingredients = self.initial_data.get("ingredients")
 
@@ -135,7 +134,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         CountIngredients.objects.bulk_create(objs)
         return recipe
 
-
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)
         instance.image = validated_data.get("image", instance.image)
@@ -160,13 +158,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             for ingredient_data in ingredients_data
         ]
-        
         if ingredients_data is not None:
             instance.ingredients.clear()
-        
         CountIngredients.objects.bulk_create(objs)
         return super().update(instance, validated_data)
-
 
     def get_is_favorited(self, obj):
         request = self.context["request"]

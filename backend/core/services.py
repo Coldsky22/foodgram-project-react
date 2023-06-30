@@ -1,22 +1,15 @@
 from datetime import datetime as dt
-from typing import TYPE_CHECKING
-from urllib.parse import unquote
-
-from django.apps import apps
 from django.db.models import F, Sum
 from foodgram.settings import DATE_TIME_FORMAT
-from recipes.models import AmountIngredient, Recipe
-from recipes.models import Ingredient
-from users.models import MyUser
+from users.models import User
+from app.models import Ingredient
 
 
-
-def create_shoping_list(user: "MyUser"):
+def create_shoping_list(user: "User"):
     shopping_list = [
         f"Список покупок для:\n\n{user.first_name}\n"
         f"{dt.now().strftime(DATE_TIME_FORMAT)}\n"
     ]
-    Ingredient = apps.get_model("recipes", "Ingredient")
     ingredients = (
         Ingredient.objects.filter(recipe__recipe__in_carts__user=user)
         .values("name", measurement=F("measurement_unit"))

@@ -1,8 +1,7 @@
 from django.http.response import HttpResponse
-from app.models import (CountIngredients, Favorites, Ingredient, Recipe,
+from app.models import (Favorites, Ingredient, Recipe,
                         ShopingCart, Tag)
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -15,7 +14,6 @@ from .filters import IngredientFilter
 from .permissions import IsUserOwner
 from .serializers import (IngredientSerializer, RecipeMinifiedSerializer,
                           RecipeSerializer, TagSerializer)
-from .utils import file_creation
 from core.services import create_shoping_list
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
@@ -136,6 +134,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         response["Content-Disposition"] = f"attachment; filename={filename}"
         return response
+
 
 @api_view(["GET"])
 def get_favorite(request):

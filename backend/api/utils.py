@@ -15,7 +15,7 @@ def file_creation(shopping_list):
         ingredient_name=F("name"),
         measurement_unit=F("measurement_unit"),
     )
-    
+
     shopping_lines = []
     for line in shopping_list:
         ingredient = next(

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+DATE_TIME_FORMAT = "%d/%m/%Y %H:%M"
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = (os.getenv('SECRET_KEY'), 'my_secret_code_ilz@4zqj=rq##zgl9(vs')

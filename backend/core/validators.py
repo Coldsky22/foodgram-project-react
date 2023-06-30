@@ -1,11 +1,8 @@
-
 from django.core.exceptions import ValidationError
-from django.utils.deconstruct import deconstructible
-from recipes.models import Ingredient, Tag
+from app.models import Ingredient, Tag
 
 
-
-def tags_exist_validator(tags_ids: list[int | str], Tag: "Tag") -> list["Tag"]:
+def tags_exist_validator(tags_ids, Tag):
     if not tags_ids:
         raise ValidationError("Не указаны тэги")
 
@@ -17,10 +14,7 @@ def tags_exist_validator(tags_ids: list[int | str], Tag: "Tag") -> list["Tag"]:
     return tags
 
 
-def ingredients_validator(
-    ingredients: list[dict[str, str | int]],
-    Ingredient: "Ingredient",
-) -> dict[int, tuple["Ingredient", int]]:
+def ingredients_validator(ingredients, Ingredient):
     if not ingredients:
         raise ValidationError("Не указаны ингридиенты")
 
