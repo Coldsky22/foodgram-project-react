@@ -1,35 +1,33 @@
-version: '3.3'
+version: '3.8'
 services:
 
   db:
     image: postgres:13.0-alpine
     volumes:
-      - db_value:/var/lib/postgresql/data/
+      - db_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
-
+    
   web:
-    image: coldsky21/foodgram_backend:v1
+    image: coldsky21/backend
     restart: always
     volumes:
-      - ../frontend/build://app/static/
       - static_value:/app/static/
       - media_value:/app/media/
-      - ./data/:/app/data/
     depends_on:
       - db
     env_file:
       - ./.env
 
   frontend:
-    image: coldsky21/foodgram_fronend:v1
+    image: coldsky21/frontend
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
       - web
 
   nginx:
-    image: nginx:1.19.3
+    image: nginx:1.21.3-alpine
     ports:
       - "80:80"
     volumes:
@@ -39,9 +37,11 @@ services:
       - static_value:/var/html/static/
       - media_value:/var/html/media/
     depends_on:
+      - web
       - frontend
+    restart: always
 
 volumes:
-  db_value: 
   static_value:
-  media_value:    
+  media_value:
+  db_data:
