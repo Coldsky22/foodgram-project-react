@@ -1,5 +1,5 @@
-from django.core.exceptions import ValidationError
 from app.models import Ingredient, Tag
+from django.core.exceptions import ValidationError
 
 
 def tags_exist_validator(tags_ids, Tag):

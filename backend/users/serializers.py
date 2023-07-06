@@ -2,8 +2,7 @@ from app.models import Follow, Recipe
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import MaxLengthValidator, RegexValidator
 from rest_framework import serializers
-from api.serializers import RecipeMinifiedSerializer
-
+from drf_extra_fields.fields import Base64ImageField
 from .models import User
 
 
@@ -107,6 +106,14 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(current_password):
             raise serializers.ValidationError("Неверный текущий пароль")
         return data
+
+
+class RecipeMinifiedSerializer(serializers.ModelSerializer):
+    image = Base64ImageField(allow_null=False)
+
+    class Meta:
+        model = Recipe
+        fields = ("id", "name", "image", "cooking_time")
 
 
 class FollowSerializer(UserSerializer):
