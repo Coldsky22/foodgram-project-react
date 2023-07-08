@@ -1,0 +1,4 @@
+логин coldsky21
+пароль coldsky21
+email bingalik@mail
+ip http://51.250.23.94/
