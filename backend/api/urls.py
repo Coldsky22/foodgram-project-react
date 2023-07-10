@@ -1,44 +1,43 @@
-"""
-Создание маршрутизаторов API проекта Foodgram.
-"""
-
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (CartViewSet, CreateUserView, DownloadCart, FavoriteViewSet,
-                    IngredientViewSet, RecipeViewSet, SubscribeViewSet,
-                    TagViewSet)
+from .views import (DownloadShoppingCartView, FavoriteView, IngredientViewSet,
+                    RecipesViewSet, ShoppingCartView, TagViewSet, UsersViewSet)
 
 app_name = 'api'
-router = DefaultRouter()
 
-router.register('users', CreateUserView, basename='users')
-router.register(r'tags', TagViewSet, basename='tags')
-router.register(r'ingredients', IngredientViewSet, basename='ingrediens')
-router.register(r'recipes', RecipeViewSet, basename='recipes')
+router = DefaultRouter()
+router.register('users', UsersViewSet, basename='users')
+router.register('ingredients', IngredientViewSet, basename='ingredients')
+router.register('recipes', RecipesViewSet, basename='recipes')
+router.register('tags', TagViewSet, basename='tags')
 
 urlpatterns = [
     path(
-        'users/subscriptions/',
-        SubscribeViewSet.as_view({'get': 'list'}),
-        name='subscriptions'
+        'recipes/<str:pk>/favorite/',
+        FavoriteView.as_view(),
+        name='favorite',
+    ),
+    path(
+        'recipes/<str:pk>/shopping_cart/',
+        ShoppingCartView.as_view(),
+        name='shopping_cart',
     ),
     path(
         'recipes/download_shopping_cart/',
-        DownloadCart.as_view({'get': 'download'}),
-        name='download'
+        DownloadShoppingCartView.as_view(),
+        name='download_shopping_cart',
     ),
     path(
-        'users/<users_id>/subscribe/',
-        SubscribeViewSet.as_view({'post': 'create', 'delete': 'delete'}),
-        name='subscribe'
+        '',
+        include(router.urls),
     ),
-    path('recipes/<recipes_id>/favorite/',
-         FavoriteViewSet.as_view({'post': 'create',
-                                  'delete': 'delete'}), name='favorite'),
-    path('recipes/<recipes_id>/shopping_cart/',
-         CartViewSet.as_view({'post': 'create',
-                              'delete': 'delete'}), name='cart'),
-    path('', include(router.urls)),
-    path('auth/', include('djoser.urls.authtoken')),
+    path(
+        '',
+        include('djoser.urls'),
+    ),
+    path(
+        'auth/',
+        include('djoser.urls.authtoken'),
+    ),
 ]

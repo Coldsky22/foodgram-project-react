@@ -1,49 +1,56 @@
-"""
-Настройка пользовательских фильтров.
-"""
+from django.db import models
+from django_filters import CharFilter, rest_framework
 
-from django_filters import rest_framework as django_filter
-from recipes.models import Recipe
-from rest_framework import filters
-from users.models import User
+from recipes.models import Ingredient, Recipe
 
 
-class RecipeFilters(django_filter.FilterSet):
-    """
-    Настройка фильтров модели рецептов.
-    """
-    author = django_filter.ModelChoiceFilter(queryset=User.objects.all())
-    tags = django_filter.AllValuesMultipleFilter(field_name='tags__slug')
-    is_favorited = django_filter.BooleanFilter(method='get_is_favorited')
-    is_in_shopping_cart = django_filter.BooleanFilter(
-        method='get_is_in_shopping_cart')
+class IngredientFilter(rest_framework.FilterSet):
+    """Фильтр ингредиентов."""
+
+    name = CharFilter(method='filtering_by_name')
+
+    def filtering_by_name(self, queryset, name, value):
+        if not value:
+            return queryset
+
+        starts_with = queryset.filter(name__istartswith=value).annotate(
+            qs_order=models.Value(0, models.IntegerField())
+        )
+        contains = (
+            queryset.filter(name__icontains=value)
+            .exclude(name__in=starts_with.values('name'))
+            .annotate(qs_order=models.Value(1, models.IntegerField()))
+        )
+
+        return starts_with.union(contains).order_by('qs_order')
 
     class Meta:
-        """
-        Мета параметры фильтров модели рецептов.
-        """
-        model = Recipe
-        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
+        model = Ingredient
+        fields = ('name',)
+
+
+class RecipeFilter(rest_framework.FilterSet):
+    """Фильтр рецептов."""
+    tags = rest_framework.AllValuesMultipleFilter(
+        field_name='tags__slug'
+    )
+    is_favorited = rest_framework.BooleanFilter(
+        method='get_is_favorited',
+    )
+    is_in_shopping_cart = rest_framework.BooleanFilter(
+        method='get_is_in_shopping_cart',
+    )
 
     def get_is_favorited(self, queryset, name, value):
-        """
-        Метод обработки фильтров параметра is_favorited.
-        """
-        if self.request.user.is_authenticated and value:
+        if value:
             return queryset.filter(favorites__user=self.request.user)
         return queryset
 
     def get_is_in_shopping_cart(self, queryset, name, value):
-        """
-        Метод обработки фильтров параметра is_in_shopping_cart.
-        """
-        if self.request.user.is_authenticated and value:
-            return queryset.filter(carts__user=self.request.user)
-        return queryset.all()
+        if value:
+            return queryset.filter(shopping_cart__user=self.request.user)
+        return queryset
 
-
-class IngredientSearchFilter(filters.SearchFilter):
-    """
-    Настройка фильтра поиска модели продуктов.
-    """
-    search_param = 'name'
+    class Meta:
+        model = Recipe
+        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')

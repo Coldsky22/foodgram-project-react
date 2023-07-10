@@ -1,86 +1,74 @@
-"""
-Создание модели пользователя.
-"""
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import F, Q
 
 
 class User(AbstractUser):
     """
-    Создание своей модели пользователя.
+    Модель таблицы пользователей.
+    Attributes:
+        email: EmailField - переопределяем поле, выставляем
+        ограничение символов согласно тз
+        first_name: CharField - переопределяем поле, выставляем
+        ограничение символов согласно тз
     """
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-    ROLES = {
-        (USER, 'user'),
-        (MODERATOR, 'moderator'),
-        (ADMIN, 'admin'),
-    }
-    username = models.CharField(
-        db_index=True,
-        max_length=150,
-        unique=True,
-        null=False,
-        blank=False,
-        verbose_name='Логин',
-        help_text='Введите уникальный логин'
-    )
+
     email = models.EmailField(
-        db_index=True,
-        null=False,
-        blank=False,
-        unique=True,
         max_length=254,
-        verbose_name='Электронная почта',
-        help_text='Введите электронную почту'
+        unique=True,
+        verbose_name='Email'
     )
     first_name = models.CharField(
-        max_length=254,
-        null=False,
-        blank=False,
-        verbose_name='Имя',
-        help_text='Введите имя пользователя'
-    )
-    last_name = models.CharField(
-        max_length=254,
-        null=False,
-        blank=False,
-        verbose_name='Фамилия',
-        help_text='Введите фамилию пользователя'
-    )
-    role = models.CharField(
-        verbose_name='статус',
-        max_length=20,
-        choices=ROLES,
-        default=USER,
-    )
-    date_joined = models.DateTimeField(
-        verbose_name='Дата регистрации',
-        auto_now_add=True,
-    )
-    password = models.CharField(
-        verbose_name='Пароль',
         max_length=150,
-        help_text='Введите пароль',
+        verbose_name="Имя"
     )
+
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
-
-    @property
-    def is_admin(self):
-        return self.role == self.ADMIN
-
-    @property
-    def is_moderator(self):
-        return self.role == self.MODERATOR
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
-        constraints = (
-            models.UniqueConstraint(fields=['username', 'email'],
-                                    name='uniq_signup'),
-        )
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ('-id',)
 
-    def __str__(self) -> str:
-        """Строковое представление модели (отображается в консоли)."""
+    def __str__(self):
         return self.username
+
+
+class Subscription(models.Model):
+    """
+    Модель таблицы подписчиков.
+    Attributes:
+        user: ForeignKey - ссылка (ID) на объект класса User
+        author: ForeignKey - ссылка (ID) на объект класса User
+    """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscriber',
+        verbose_name='Подписчик'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='idol',
+        verbose_name='Автор'
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscribe',
+            ),
+            models.CheckConstraint(
+                check=~Q(user=F('author')),
+                name='subscriber_not_author',
+            )
+        ]
+
+    def __str__(self):
+        return f'The {self.user} is subscribed to the {self.author}'
