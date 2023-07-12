@@ -158,6 +158,7 @@ class RecipeViewSet(ModelViewSet):
         ingredients = models.IngredientAmountInRecipe.objects.filter(
             recipe__shopping_cart__user=request.user
         ).values(
+            'recipe__name',
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount_sum=Sum('amount'))
@@ -165,6 +166,7 @@ class RecipeViewSet(ModelViewSet):
         today = timezone.now()
         shopping_card_list = (
             f'Список покупок для: {user.get_full_name()}\n\n'
+            f'Рецепт: {ingredients[0]["recipe__name"]}\n'
             f'Дата: {today:%d.%m.%Y}\n'
         )
         shopping_card_list += '\n'.join([

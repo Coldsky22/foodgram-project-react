@@ -1,4 +1,4 @@
 логин coldsky21
 пароль coldsky21
 email bingalik@mail
-ip http://158.160.75.120/
+ip http://158.160.76.69/

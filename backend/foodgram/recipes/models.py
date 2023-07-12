@@ -1,5 +1,6 @@
 from django.core.validators import RegexValidator
 from django.db import models
+from django.forms import ValidationError
 
 from foodgram.global_constants import (
     COLOR_NAME_LENGTH,
@@ -134,6 +135,11 @@ class Recipe(models.Model):
     def __str__(self):
         return f'Рецепт {self.name}'
 
+    def clean(self):
+        if self.cooking_time > 32767:
+            raise ValidationError("Время готовки не может превышать 32767")
+        super().clean()
+
 
 class IngredientAmountInRecipe(models.Model):
     '''
@@ -167,6 +173,11 @@ class IngredientAmountInRecipe(models.Model):
     def __str__(self):
         return f'{self.ingredient} -\
             {self.amount} {self.ingredient.measurement_unit}'
+
+    def clean(self):
+        if self.amount > 32767:
+            raise ValidationError("Кол-во ингредиента не может быть 32767.")
+        super().clean()
 
 
 class Favourite(models.Model):

@@ -9,7 +9,7 @@ services:
       - .env
 
   backend:
-    image: coldsky21/backend:v2
+    image: coldsky21/backend:v3
     container_name: foodgram-backend
     restart: always
     volumes:
