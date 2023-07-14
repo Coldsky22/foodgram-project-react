@@ -1,52 +1,21 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import User
+from .models import Subscribe, User
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    """
-    Настройки отображения таблицы с пользователями в админ зоне.
-    Attributes:
-        list_display: - отображаемые поля
-        search_fields: - поле для поиска соответствий
-        list_filter: - сортируемое поле записей
-        list_editable: - редактируемое поле
-        empty_value_display: - заполнитель ячеек со значением None
-    """
-
+class UserAdmin(UserAdmin):
     list_display = (
+        'username',
         'id',
-        'username',
         'email',
         'first_name',
         'last_name',
-        'date_joined',
-        'is_active',
-        'password',
     )
-    search_fields = (
-        'email',
-        'username',
-        'first_name',
-        'last_name',
-        'is_active',
-    )
-    list_filter = (
-        'email',
-        'first_name',
-        'is_active',
-    )
-    list_editable = (
-        'username',
-        'email',
-        'first_name',
-        'last_name',
-        'is_active',
-        'password',
-    )
-    empty_value_display = '-пусто-'
+    list_filter = ('email', 'first_name')
 
 
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+@admin.register(Subscribe)
+class SubscribeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'author',)

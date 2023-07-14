@@ -1,54 +1,42 @@
-from django.contrib.admin import ModelAdmin, TabularInline, register
+from django.contrib import admin
+from django.contrib.admin import display
 
-from recipes.models import (FavoriteRecipe, Ingredient, IngredientAmount,
-                            Recipe, ShoppingCart, Tag)
-from recipes.strings import EMPTY
-
-
-@register(Tag)
-class TagAdmin(ModelAdmin):
-    """Регистрация в админке тэгов."""
-
-    list_display = ('name', 'color', 'slug')
-    empty_value_display = f'{EMPTY}'
-    ordering = ('color',)
+from .models import (Favourite, Ingredient, IngredientInRecipe, Recipe,
+                     ShoppingCart, Tag)
 
 
-@register(Ingredient)
-class IngredientAdmin(ModelAdmin):
-    """Настройки отображения таблицы с ингредиентами."""
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'id', 'author', 'added_in_favorites')
+    readonly_fields = ('added_in_favorites',)
+    list_filter = ('author', 'name', 'tags',)
 
-    list_display = ('name', 'measurement_unit')
-    empty_value_display = f'{EMPTY}'
+    @display(description='Количество в избранных')
+    def added_in_favorites(self, obj):
+        return obj.favorites.count()
+
+
+@admin.register(Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = ('name', 'measurement_unit',)
     list_filter = ('name',)
-    ordering = ('name',)
 
 
-class IngredientAmountInline(TabularInline):
-    model = IngredientAmount
-    min_num = 1
-    extra = 1
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug',)
 
 
-@register(Recipe)
-class RecipeAdmin(ModelAdmin):
-    """Настройки отображения таблицы с рецептами."""
-
-    list_display = ('name', 'author')
-    list_filter = ['author', 'name', 'tags']
-    inlines = (IngredientAmountInline,)
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe',)
 
 
-@register(FavoriteRecipe)
-class FavoriteRecipeAdmin(ModelAdmin):
-    """Настройки отображения таблицы с избранными рецептами."""
-
-    list_display = ('pk', 'user', 'recipe')
-    empty_value_display = f'{EMPTY}'
+@admin.register(Favourite)
+class FavouriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe',)
 
 
-@register(ShoppingCart)
-class ShoppingCartAdmin(ModelAdmin):
-    """Настройки отображения таблицы с корзиной покупок."""
-    list_display = ('pk', 'user', 'recipe')
-    empty_value_display = f'{EMPTY}'
+@admin.register(IngredientInRecipe)
+class IngredientInRecipe(admin.ModelAdmin):
+    list_display = ('recipe', 'ingredient', 'amount',)
